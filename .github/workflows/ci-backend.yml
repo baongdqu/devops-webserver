@@ -87,6 +87,7 @@ jobs:
             type=sha,format=short,prefix=sha-
 
       - name: Build and Push Docker Image
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: ./app/backend
@@ -96,3 +97,28 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # TỰ ĐỘNG CẬP NHẬT TAG CONTAINER MỚI VÀO PRODUCTION GITOPS REPOSITORY
+      - name: Auto-Update Image Tag in GitOps Repository
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "Promoting new backend image tag: sha-${SHORT_SHA} to GitOps repository..."
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone repo GitOps
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/baongdqu/project-devops-gitops.git gitops-repo
+          cd gitops-repo
+
+          # Cập nhật tag mới vào cả môi trường dev và prod (kustomization.yaml)
+          sed -i "s|ghcr.io/baongdqu/project-devops-webserver/backend:.*|ghcr.io/baongdqu/project-devops-webserver/backend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/dev/kustomization.yaml
+          sed -i "s|ghcr.io/baongdqu/project-devops-webserver/backend:.*|ghcr.io/baongdqu/project-devops-webserver/backend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/prod/kustomization.yaml
+
+          # Commit & Push sang GitOps repo
+          git add k8s/manifests/overlays/
+          git diff --staged --quiet || (git commit -m "chore(gitops): auto-deploy backend sha-${SHORT_SHA} to dev & prod [skip ci]" && git push origin main)
+
