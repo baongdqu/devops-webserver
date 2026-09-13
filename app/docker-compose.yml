@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 1. Frontend React Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devops-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # 2. Backend Node.js Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devops-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=secretpassword
+      - DB_NAME=devopsdb
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+
+  # 3. Database PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: devops-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: devopsdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # 4. Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: devops-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge

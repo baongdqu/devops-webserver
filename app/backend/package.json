@@ -1,0 +1,16 @@
+{
+  "name": "devops-backend",
+  "version": "1.0.0",
+  "description": "Backend API with Prometheus Metrics for DevOps Demo",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "prom-client": "^15.1.2"
+  }
+}
