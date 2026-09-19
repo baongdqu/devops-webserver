@@ -89,12 +89,12 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           # Clone repo GitOps
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/baongdqu/project-devops-gitops.git gitops-repo
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/baongdqu/devops-gitops.git gitops-repo
           cd gitops-repo
 
           # Cập nhật tag mới vào cả môi trường dev và prod (kustomization.yaml)
-          sed -i "s|ghcr.io/baongdqu/project-devops-webserver/frontend:.*|ghcr.io/baongdqu/project-devops-webserver/frontend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/dev/kustomization.yaml
-          sed -i "s|ghcr.io/baongdqu/project-devops-webserver/frontend:.*|ghcr.io/baongdqu/project-devops-webserver/frontend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/prod/kustomization.yaml
+          sed -i "s|ghcr.io/baongdqu/devops-webserver/frontend:.*|ghcr.io/baongdqu/devops-webserver/frontend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/dev/kustomization.yaml
+          sed -i "s|ghcr.io/baongdqu/devops-webserver/frontend:.*|ghcr.io/baongdqu/devops-webserver/frontend\n    newTag: sha-${SHORT_SHA}|g" k8s/manifests/overlays/prod/kustomization.yaml
 
           # Commit & Push sang GitOps repo
           git add k8s/manifests/overlays/
